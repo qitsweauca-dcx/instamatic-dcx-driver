@@ -1,0 +1,26 @@
+# DECTRIS SINGLA through the Rust driver (camera/super_dectris).
+# Every key and its default: docs/DESIGN.md §2.2 and §11.3.
+interface: dectris_simplon
+
+# The control unit. 169.254.254.1 is the address its service port comes with; use your network's.
+DCU_host: 169.254.254.1
+DCU_port: 80
+ZMQ_host: 169.254.254.1
+ZMQ_port: 31001  # Stream V2
+
+dimensions: [1028, 1062]  # SINGLA 1M; frames take their shape from the stream
+physical_pixelsize: 0.075  # mm
+possible_binsizes: [1]
+default_binsize: 1
+default_exposure: 0.1
+dynamic_range: 11800  # upper end of the live view's contrast
+
+camera_rotation_vs_stage_xy: 0.0  # calibrate on your microscope
+stretch_amplitude: 0.0
+stretch_azimuth: 0.0
+
+trigger_mode: ints
+compression: bslz4
+
+# The receive queue holds up to 500 frames by default. Code that pairs a frame with the stage
+# tilt when the frame arrives needs a short queue, for example zmq_rcvhwm: 4 (docs/PROTOCOL.md §7.2).

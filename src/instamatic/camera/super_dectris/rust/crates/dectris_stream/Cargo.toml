@@ -1,0 +1,22 @@
+[package]
+name = "dectris_stream"
+description = "Stream V2 over ZeroMQ: PULL link, receiver, attribution, messages, single-PULL guard, receiver registry (DESIGN §4.3, §3.7)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+build = "build.rs"   # advapi32 link line (libzmq ip.cpp on MSVC, DESIGN §7)
+
+[dependencies]
+dectris_common.workspace = true
+dectris_codec.workspace = true
+log.workspace = true
+zmq.workspace = true
+
+[dev-dependencies]
+dectris_common = { workspace = true, features = ["test-util"] }
+ciborium.workspace = true
+
+[lints]
+workspace = true

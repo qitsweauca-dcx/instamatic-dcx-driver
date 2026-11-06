@@ -1,0 +1,23 @@
+[package]
+name = "dectris_core"
+description = "Facade over the driver crates (re-exports codec/simplon/stream as in DESIGN §1) plus driver state (DESIGN §3.2, §3.4). Pure Rust, no pyo3."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+dectris_common.workspace = true
+dectris_codec.workspace = true
+dectris_simplon.workspace = true
+dectris_stream.workspace = true
+log.workspace = true
+
+[dev-dependencies]
+dectris_common = { workspace = true, features = ["test-util"] }
+dectris_simplon = { workspace = true, features = ["test-util"] }
+serde_json.workspace = true
+
+[lints]
+workspace = true

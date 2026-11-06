@@ -1,0 +1,10 @@
+# Built by build.ps1; published as release assets, never committed
+*.pyd
+*.pdb
+/build/
+target/
+__pycache__/
+.pytest_cache/
+# Left by pip install third_party\...
+third_party/*/build/
+third_party/*/python/*.egg-info/

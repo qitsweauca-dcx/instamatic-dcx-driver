@@ -1,0 +1,22 @@
+# cargo-about configuration (DESIGN §7 [R38]). Generates THIRD_PARTY_NOTICES.md via about.hbs.
+# libzmq (MPL-2.0 for 4.3.5 / LGPL-3.0 + static-linking exception) and wepoll (BSD-2-Clause) are C
+# sources inside zeromq-src; cargo-about only reads crate licence fields, so build.ps1 appends a
+# checked-in manual addendum for them.
+accepted = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "BlueOak-1.0.0",
+    "MPL-2.0",
+]
+targets = ["x86_64-pc-windows-msvc"]
+# Notices cover code shipped in the .pyd. Build-time-only crates (cc, pyo3-build-config, target-lexicon, ...)
+# are not linked in. The C sources that zeromq-src (a build dependency) compiles INTO the .pyd are covered
+# by notices_addendum.md, which build.ps1 appends.
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
+private = { ignore = true }

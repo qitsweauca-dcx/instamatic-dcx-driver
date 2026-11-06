@@ -1,0 +1,27 @@
+Metadata-Version: 2.1
+Name: dectris-compression
+Version: 0.3.1
+Summary: DECTRIS compression algorithms
+Home-page: https://github.com/dectris/compression
+Author: Kal Conley
+Author-email: kal.conley@dectris.com
+License: MIT
+Keywords: compression,dectris
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: C
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# dectris-compression
+This library provides compression algorithms used by DECTRIS.

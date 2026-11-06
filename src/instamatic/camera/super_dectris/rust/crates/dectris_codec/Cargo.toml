@@ -1,0 +1,21 @@
+[package]
+name = "dectris_codec"
+description = "Pure decoders: CBOR, typed arrays, bslz4/lz4 framing, bitshuffle, image payloads (DESIGN §4.4-§4.6). No I/O."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+dectris_common.workspace = true
+log.workspace = true
+lz4_flex.workspace = true
+
+[dev-dependencies]
+dectris_common = { workspace = true, features = ["test-util"] }
+ciborium.workspace = true
+proptest.workspace = true
+
+[lints]
+workspace = true

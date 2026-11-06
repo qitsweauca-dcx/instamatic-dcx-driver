@@ -1,0 +1,242 @@
+diff --git a/src/instamatic/__init__.py b/src/instamatic/__init__.py
+index 552013e..c70cfb1 100644
+--- a/src/instamatic/__init__.py
++++ b/src/instamatic/__init__.py
+@@ -14,6 +14,9 @@ __banner__ = r"""
+ __version__ = '2.2.2'
+ __title__ = 'instamatic'
+ __long_title__ = f'{__title__} v{__version__}'
++# The Rust Dectris driver (camera/super_dectris) sends these as its User-Agent
++__app_title__ = 'instamatic-dcx7'
++__app_version__ = '2.0.1'
+ __author__ = 'Stef Smeets'
+ __author_email__ = 's.smeets@esciencecenter.nl'
+ __description__ = 'Python program for automated serial electron diffraction data collection'
+diff --git a/src/instamatic/camera/camera.py b/src/instamatic/camera/camera.py
+index f64a5ab..f6b7806 100644
+--- a/src/instamatic/camera/camera.py
++++ b/src/instamatic/camera/camera.py
+@@ -35,6 +35,8 @@ def get_camera_class(interface: str) -> type[CameraBase]:
+         from instamatic.camera.camera_serval import CameraServal as cam
+     elif interface == 'simplon':
+         from instamatic.camera.camera_simplon import CameraSimplon as cam
++    elif interface == 'dectris_simplon':
++        from instamatic.camera.super_dectris import CameraDectris as cam
+     elif interface == 'merlin':
+         from instamatic.camera.camera_merlin import CameraMerlin as cam
+     else:
+diff --git a/src/instamatic/camera/videostream.py b/src/instamatic/camera/videostream.py
+index f0afe02..36c90e3 100644
+--- a/src/instamatic/camera/videostream.py
++++ b/src/instamatic/camera/videostream.py
+@@ -4,6 +4,7 @@ import atexit
+ import sys
+ import threading
+ import time
++import weakref
+ from collections import deque
+ from contextlib import contextmanager
+ from dataclasses import dataclass
+@@ -74,31 +75,66 @@ class MediaGrabber:
+             if self.acquireInitiateEvent.is_set():
+                 r = self.request
+                 self.acquireInitiateEvent.clear()
++                if r is None:  # the requester gave up before this thread took the request
++                    continue
+                 e = float(r.exposure if r.exposure else self.default_exposure)
+                 b = int(r.binsize if r.binsize else self.default_binsize)
+-                if isinstance(r, ImageRequest):
+-                    media = self.cam.get_image(exposure=e, binsize=b)
+-                    self.callback(media, request=r)
+-                else:  # isinstance(r, MovieRequest):
+-                    n = r.n_frames if r.n_frames else 1
+-                    m = self.cam.get_movie(n_frames=n, exposure=e, binsize=b)
+-                    self.acquireIterateEvent.wait()
+-                    for media in m:
++                # An exception goes back to the requester instead of ending this thread,
++                # which would leave the requester waiting forever.
++                try:
++                    if isinstance(r, ImageRequest):
++                        media = self.cam.get_image(exposure=e, binsize=b)
+                         self.callback(media, request=r)
+-                        time.sleep(0)  # yields thread priority to VideoStream
++                    else:  # isinstance(r, MovieRequest):
++                        self._run_movie(r, e, b)
++                except Exception as exc:
++                    self.callback(exc, request=r)
+ 
+             elif not self.continuousCollectionEvent.is_set():
+-                frame = self.cam.get_image(
+-                    exposure=self.frametime, binsize=self.default_binsize
+-                )
++                if hasattr(self.cam, 'get_preview_image'):
++                    # The camera has a preview of its own (e.g. a detector's monitor): read it
++                    # at most once per frametime instead of acquiring an image for each frame.
++                    t0 = time.perf_counter()
++                    frame = self.cam.get_preview_image()
++                    remaining = self.frametime - (time.perf_counter() - t0)
++                    if remaining > 0:
++                        self.acquireInitiateEvent.wait(remaining)
++                else:
++                    frame = self.cam.get_image(
++                        exposure=self.frametime, binsize=self.default_binsize
++                    )
+                 self.callback(frame, request=None)
+ 
++            else:  # blocked: wait for a request instead of spinning
++                self.acquireInitiateEvent.wait(0.1)
++
++    def _run_movie(self, r: MovieRequest, exposure: float, binsize: int) -> None:
++        n = r.n_frames if r.n_frames else 1
++        m = self.cam.get_movie(n_frames=n, exposure=exposure, binsize=binsize)
++        k = 0
++        try:
++            while not self.acquireIterateEvent.wait(0.05):
++                if self.request is not r or self.stopEvent.is_set():
++                    return  # the movie was dropped before it was iterated
++            for media in m:
++                if self.request is not r:
++                    return  # the requester stopped reading
++                self.callback(media, request=r)
++                k += 1
++                time.sleep(0)  # yields thread priority to VideoStream
++        finally:
++            getattr(m, 'close', lambda: None)()  # e.g. stops the camera's series
++        if k < n and self.request is r:  # a short movie must not leave the requester waiting
++            raise RuntimeError(f'get_movie yielded {k} of {n} frames')
++
+     def start_loop(self):
+         self.thread = threading.Thread(target=self.run, args=(), daemon=True)
+         self.thread.start()
+ 
+     def stop(self):
+         self.stopEvent.set()
++        # Release a camera call that may hold this thread for long (e.g. a detector initialize)
++        getattr(self.cam, 'request_stop', lambda: None)()
+         self.thread.join()
+ 
+ 
+@@ -177,6 +213,9 @@ class LiveVideoStream(VideoStream):
+         self.frame = None
+         self.grabber = self.setup_grabber()
+         self.requested = deque()
++        # One requester at a time: concurrent ones would clear each other's queue and hang.
++        # A plain Lock, because a movie that is dropped unread releases it from another thread.
++        self.request_lock = threading.Lock()
+         self.start()
+ 
+     def start(self):
+@@ -184,56 +223,95 @@ class LiveVideoStream(VideoStream):
+ 
+     def send_media(
+         self,
+-        media: Union[np.ndarray, List[np.ndarray]],
++        media: Union[np.ndarray, List[np.ndarray], BaseException],
+         request: Optional[MediaRequest] = None,
+     ) -> None:
+-        """Callback function of `self.grabber` that handles grabbed media."""
++        """Callback function of `self.grabber` that handles grabbed media.
++
++        Requested media are queued with their request, so a requester can
++        skip items of an earlier request; `media` may be an exception
++        raised by the camera, which the requester raises again.
++        """
+         if isinstance(request, MediaRequest):
+-            self.requested.append(media)
+-        self.frame = media
++            if request is self.grabber.request:  # nobody waits for an abandoned request
++                self.requested.append((request, media))
++        if not isinstance(media, BaseException):
++            self.frame = media
+ 
+     def setup_grabber(self) -> MediaGrabber:
+         grabber = MediaGrabber(self.cam, callback=self.send_media, frametime=self.frametime)
+         atexit.register(grabber.stop)
+         return grabber
+ 
++    def _next_requested(self, request: MediaRequest):
++        """Wait for the next item of `request`, skipping items of earlier
++        requests; raise an exception handed back by the grabber."""
++        while True:
++            while not self.requested:
++                t = self.grabber.thread
++                if self.grabber.stopEvent.is_set() or t is None or not t.is_alive():
++                    raise RuntimeError('the media grabber has stopped')
++                time.sleep(0)  # yields thread priority to MediaGrabber
++            r, item = self.requested.popleft()
++            if r is request:
++                break
++        if isinstance(item, BaseException):
++            raise item
++        return item
++
+     def get_image(self, exposure=None, binsize=None) -> np.ndarray:
+         """Stop passive acquisition, request one image from MediaGrabber."""
+-        with self.blocked():
+-            self.grabber.request = ImageRequest(exposure=exposure, binsize=binsize)
++        with self.request_lock, self.blocked():
++            self.requested.clear()
++            request = ImageRequest(exposure=exposure, binsize=binsize)
++            self.grabber.request = request
+             self.grabber.acquireInitiateEvent.set()
+-            while not self.requested:
+-                time.sleep(0)  # yields thread priority to MediaGrabber
+-            image = self.requested.popleft()
+-            self.grabber.request = None
++            try:
++                image = self._next_requested(request)
++            finally:
++                self.grabber.request = None
+         return image
+ 
+     def get_movie(
+         self, n_frames: int, exposure=None, binsize=None
+     ) -> Generator[np.ndarray, None, None]:
+         """Stop passive acquisition, request frames once movie is iterated."""
++        self.request_lock.acquire()
+         blocked = self.blocked()
+         blocked.__enter__()
+         try:
+-            self.grabber.request = MovieRequest(n_frames, exposure, binsize)
++            self.requested.clear()
++            request = MovieRequest(n_frames, exposure, binsize)
++            self.grabber.request = request
+             self.grabber.acquireInitiateEvent.set()
+         except BaseException:
+             blocked.__exit__(*sys.exc_info())
++            self.request_lock.release()
+             raise
+ 
++        finished = []
++
++        def finish() -> None:
++            """Runs once: when the movie ends, or when it is dropped unread."""
++            if finished:
++                return
++            finished.append(True)
++            self.grabber.request = None
++            self.grabber.acquireIterateEvent.clear()
++            blocked.__exit__(None, None, None)
++            self.request_lock.release()
++
+         def _movie_generator() -> Generator[np.ndarray, None, None]:
+             try:
+                 self.grabber.acquireIterateEvent.set()
+                 for _ in range(n_frames):
+-                    while not self.requested:
+-                        time.sleep(0)  # yields thread priority to MediaGrabber
+-                    yield self.requested.popleft()
++                    yield self._next_requested(request)
+             finally:
+-                self.grabber.request = None
+-                self.grabber.acquireIterateEvent.clear()
+-                blocked.__exit__(*sys.exc_info())
++                finish()
+ 
+-        return _movie_generator()
++        movie = _movie_generator()
++        weakref.finalize(movie, finish)  # a generator never started runs no `finally`
++        return movie
+ 
+     def update_frametime(self, frametime):
+         self.frametime = frametime

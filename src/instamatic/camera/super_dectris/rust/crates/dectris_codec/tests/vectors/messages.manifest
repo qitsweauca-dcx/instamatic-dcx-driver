@@ -1,0 +1,15 @@
+# file kind series_id image_id elem_tag rows cols order pattern seed payload
+msg_start_all_raw.cbor start 42 - - 32 48 - - - raw
+msg_start_all_bslz4.cbor start 42 - - 32 48 - - - bslz4
+msg_image_0.cbor image 42 1 70 37 53 C low 700 bslz4
+msg_image_1.cbor image 42 2 69 37 53 C sat 701 bslz4
+msg_image_2.cbor image 42 3 64 37 53 C random 702 bslz4
+msg_image_3.cbor image 42 4 70 37 53 C low 703 lz4
+msg_image_4.cbor image 42 5 70 37 53 C ramp 704 raw
+msg_image_5.cbor image 42 6 69 37 53 C low 705 raw
+msg_image_6.cbor image 42 7 68 37 53 C sat 706 raw
+msg_image_7.cbor image 42 8 70 37 53 F low 707 raw
+msg_image_8.cbor image 42 9 70 37 53 F sat 708 bslz4
+msg_image_9.cbor image 42 10 69 37 53 F random 709 lz4
+msg_end.cbor end 42 - - - - - - - -
+msg_typed.cbor typed - - - - - - - - -

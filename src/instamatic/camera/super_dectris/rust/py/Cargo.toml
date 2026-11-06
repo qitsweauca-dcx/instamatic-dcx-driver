@@ -1,0 +1,27 @@
+[package]
+name = "super_dectris_py"
+description = "PyO3 extension module instamatic.camera.super_dectris._super_dectris (DESIGN §2)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[lib]
+name = "_super_dectris"
+crate-type = ["cdylib"]
+# No Rust test harness for the cdylib: with extension-module it cannot link/load python312.dll
+# outside the interpreter. Python-side tests cover this crate (DESIGN §8).
+test = false
+doctest = false
+
+[dependencies]
+dectris_core.workspace = true
+pyo3.workspace = true
+numpy.workspace = true
+pyo3-log.workspace = true
+serde_json.workspace = true
+log.workspace = true
+
+[lints]
+workspace = true

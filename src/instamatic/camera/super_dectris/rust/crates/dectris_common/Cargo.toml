@@ -1,0 +1,22 @@
+[package]
+name = "dectris_common"
+description = "Shared logging (dlog!/slog!, NO_PYTHON, Deferred), DriverError and small utilities (DESIGN §2.9, §6)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+build = "build.rs"   # advapi32 link line for libzmq on MSVC (see build.rs)
+
+[features]
+# Exposes `dectris_common::testing` (capture logger) to other crates' tests:
+#   [dev-dependencies] dectris_common = { workspace = true, features = ["test-util"] }
+test-util = []
+
+[dependencies]
+log.workspace = true
+thiserror.workspace = true
+zmq.workspace = true
+
+[lints]
+workspace = true

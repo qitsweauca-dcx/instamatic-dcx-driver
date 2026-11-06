@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use this driver, please cite it as below."
+type: software
+title: "instamatic-dcx-driver: a Rust driver for DECTRIS SINGLA detectors in Instamatic"
+authors:
+  - family-names: Tsai
+    given-names: Chung-Han
+    orcid: "https://orcid.org/0000-0003-3581-7654"
+version: 1.0.1
+doi: 10.5281/zenodo.23993707
+date-released: 2026-11-05
+license: Apache-2.0
+repository-code: "https://github.com/qitsweauca-dcx/instamatic-dcx-driver"
+abstract: >-
+  A camera interface for Instamatic, and for programs built on it, that drives a DECTRIS SINGLA
+  through its detector control unit: the SIMPLON 1.8 REST API for control, Stream V2 over ZeroMQ
+  for the frames, and the Monitor for the live view. It is written in Rust and loaded by Python as
+  one extension module; frames are decoded and decompressed (bslz4, lz4) without holding Python's
+  GIL. It supports single images, movies and continuous series in the trigger modes ints, inte,
+  exts and exte. DECTRIS, SINGLA and SIMPLON are names of DECTRIS Ltd; this project is not made,
+  endorsed or supported by DECTRIS.
+keywords:
+  - electron diffraction
+  - 3D ED
+  - Instamatic
+  - DECTRIS SINGLA
+  - SIMPLON
+  - Stream V2
+  - ZeroMQ
+  - camera driver
+  - Rust
+references:
+  - type: software
+    title: Instamatic
+    authors:
+      - name: "The Instamatic developers"
+    doi: 10.5281/zenodo.1090388
+    repository-code: "https://github.com/instamatic-dev/instamatic"

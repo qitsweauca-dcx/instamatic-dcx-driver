@@ -1,0 +1,5 @@
+instamatic-dcx-driver
+Copyright 2026 Chung-Han Tsai
+
+The compiled driver includes software by others, under their own licences. They are listed in
+src/instamatic/camera/super_dectris/THIRD_PARTY_NOTICES.md.

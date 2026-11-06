@@ -1,0 +1,6 @@
+* text=auto eol=lf
+
+# Test vectors are compared byte for byte
+src/instamatic/camera/super_dectris/rust/crates/*/tests/vectors/** -text
+# The self-check's test message
+src/instamatic/camera/super_dectris/selfcheck_image.cbor -text

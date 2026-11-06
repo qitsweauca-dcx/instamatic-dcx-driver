@@ -1,0 +1,71 @@
+# Cargo workspace of the driver (docs/DESIGN.md §1, §7). `dectris_core` is a facade that re-exports
+# the member crates as `codec` / `simplon` / `stream`.
+[workspace]
+members = [
+    "crates/dectris_common",
+    "crates/dectris_codec",
+    "crates/dectris_simplon",
+    "crates/dectris_stream",
+    "crates/dectris_core",
+    "py",
+]
+resolver = "2"
+
+[workspace.package]
+version = "1.0.1"
+edition = "2021"
+rust-version = "1.85"
+publish = false
+# Same terms as the repository (LICENSE); cargo-about requires a licence field on every crate.
+license = "Apache-2.0"
+
+[workspace.dependencies]
+# internal crates
+dectris_common = { path = "crates/dectris_common" }
+dectris_codec = { path = "crates/dectris_codec" }
+dectris_simplon = { path = "crates/dectris_simplon" }
+dectris_stream = { path = "crates/dectris_stream" }
+dectris_core = { path = "crates/dectris_core" }
+
+# runtime pins (DESIGN §7)
+log = "0.4.34"
+# libzmq 4.3.5 (MPL-2.0), DESIGN §12 #1: rust-zmq master pinned by rev; Cargo.lock holds
+# zeromq-src 0.3.6+4.3.5. Members must use `zmq.workspace = true` (never crates.io zmq: both zmq-sys
+# declare links = "zmq"). Still needs advapi32 on MSVC (build.rs).
+zmq = { git = "https://github.com/erickt/rust-zmq", rev = "5d78967001abb1aece2fba878d6151cb66cd1767" }
+thiserror = "2.0.21"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ureq = { version = "3.4.2", default-features = false, features = ["json"] }   # no TLS
+lz4_flex = { version = "0.14.0", default-features = false, features = ["std", "safe-decode", "checked-decode"] }   # [R15]
+tiff = { version = "0.11.3", default-features = false, features = ["deflate", "lzw"] }
+
+# py crate only
+pyo3 = { version = "0.29.3", features = ["extension-module"] }
+numpy = "0.29.0"
+pyo3-log = "0.13.4"
+
+# dev-dependencies (test oracles / property tests)
+ciborium = "0.2"
+proptest = "1"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+# Engineering rule: no unwrap()/expect() on wire or network data (DESIGN §6). Tests are exempt via clippy.toml.
+unwrap_used = "warn"
+expect_used = "warn"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "unwind"
+debug = 1            # PDB (gitignored) for crash triage
+strip = "none"
+
+[profile.test-opt]   # timing tests; fat LTO only for the shipped .pyd
+inherits = "release"
+lto = false
+codegen-units = 16

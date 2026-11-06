@@ -1,0 +1,22 @@
+# name algo elem pattern seed n_elems junk_hex oracle_verdict container offset length
+junk0_00 bslz4 4 low 5000 64 00 ok oracle_junk.bin 0 53
+junk0_4a554e4b bslz4 4 low 5000 64 4a554e4b ok oracle_junk.bin 53 56
+junk0_00000000 bslz4 4 low 5000 64 00000000 ok oracle_junk.bin 109 56
+junk1_00 bslz4 4 low 5001 65 00 err oracle_junk.bin 165 144
+junk1_4a554e4b bslz4 4 low 5001 65 4a554e4b err oracle_junk.bin 309 147
+junk1_00000000 bslz4 4 low 5001 65 00000000 err oracle_junk.bin 456 147
+junk2_00 bslz4 2 ramp 5002 221 00 err oracle_junk.bin 603 612
+junk2_4a554e4b bslz4 2 ramp 5002 221 4a554e4b err oracle_junk.bin 1215 615
+junk2_00000000 bslz4 2 ramp 5002 221 00000000 err oracle_junk.bin 1830 615
+junk3_00 bslz4 1 sat 5003 9312 00 ok oracle_junk.bin 2445 5667
+junk3_4a554e4b bslz4 1 sat 5003 9312 4a554e4b ok oracle_junk.bin 8112 5670
+junk3_00000000 bslz4 1 sat 5003 9312 00000000 ok oracle_junk.bin 13782 5670
+junk4_00 lz4 4 random 5004 64 00 ok oracle_junk.bin 19452 273
+junk4_4a554e4b lz4 4 random 5004 64 4a554e4b ok oracle_junk.bin 19725 276
+junk4_00000000 lz4 4 random 5004 64 00000000 ok oracle_junk.bin 20001 276
+junk5_00 lz4 2 low 5005 221 00 ok oracle_junk.bin 20277 711
+junk5_4a554e4b lz4 2 low 5005 221 4a554e4b ok oracle_junk.bin 20988 714
+junk5_00000000 lz4 2 low 5005 221 00000000 ok oracle_junk.bin 21702 714
+junk6_00 lz4 1 zeros 5006 771 00 ok oracle_junk.bin 22416 200
+junk6_4a554e4b lz4 1 zeros 5006 771 4a554e4b ok oracle_junk.bin 22616 203
+junk6_00000000 lz4 1 zeros 5006 771 00000000 ok oracle_junk.bin 22819 203

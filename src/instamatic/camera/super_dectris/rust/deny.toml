@@ -1,0 +1,50 @@
+# cargo-deny 0.20 schema. DESIGN §7 [R38]: licence allow-list; a copyleft transitive crate fails the build.
+# Run: cargo deny check licenses   (build.ps1 skips with a warning if cargo-deny is missing)
+
+[graph]
+targets = ["x86_64-pc-windows-msvc"]
+all-features = false
+
+[licenses]
+version = 2
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "BlueOak-1.0.0",
+    "MPL-2.0",
+]
+confidence-threshold = 0.9
+# The allow-list is the DESIGN §7 list; entries not (yet) used by the graph are fine.
+unused-allowed-license = "allow"
+
+# DESIGN §12 #19: target-lexicon is a build-time-only dependency of
+# pyo3-build-config (never linked into the .pyd). "Apache-2.0 WITH LLVM-exception" only adds
+# permissions to Apache-2.0. Scoped to this one crate; the global allow-list is unchanged.
+[[licenses.exceptions]]
+crate = "target-lexicon"
+allow = ["Apache-2.0 WITH LLVM-exception"]
+
+[licenses.private]
+# Workspace crates are publish = false and carry the repository's own licence, Apache-2.0.
+ignore = true
+
+[advisories]
+version = 2
+yanked = "warn"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# libzmq 4.3.5 path (DESIGN §12 #1): rust-zmq pinned by rev in Cargo.toml.
+allow-git = ["https://github.com/erickt/rust-zmq"]

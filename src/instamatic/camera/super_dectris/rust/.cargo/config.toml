@@ -1,0 +1,5 @@
+# Default target dir lives outside the importable package (DESIGN §7 [R36]): <repo>/build/cargo-target,
+# which .gitignore `/build` already covers. CARGO_TARGET_DIR (env) overrides this, e.g. for
+# parallel per-crate builds or build.ps1. Path is relative to this workspace root (rust/).
+[build]
+target-dir = "../../../../../build/cargo-target"

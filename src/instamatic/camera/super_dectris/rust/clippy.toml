@@ -1,0 +1,13 @@
+# DESIGN §2.9 [R31]: dlog!/slog! (dectris_common) are the only logging entry points.
+disallowed-macros = [
+    { path = "log::trace", reason = "use dectris_common::dlog!/slog! (DESIGN §2.9)" },
+    { path = "log::debug", reason = "use dectris_common::dlog!/slog! (DESIGN §2.9)" },
+    { path = "log::info", reason = "use dectris_common::dlog!/slog! (DESIGN §2.9)" },
+    { path = "log::warn", reason = "use dectris_common::dlog!/slog! (DESIGN §2.9)" },
+    { path = "log::error", reason = "use dectris_common::dlog!/slog! (DESIGN §2.9)" },
+    { path = "log::log", reason = "use dectris_common::dlog!/slog! (DESIGN §2.9)" },
+]
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true
